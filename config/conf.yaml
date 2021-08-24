@@ -1,0 +1,8 @@
+
+#主人公
+mysql:
+  user: "root"
+  password: "123"
+  database: "yang"
+  maxidle: 10
+  maxopen: 10
