@@ -2,7 +2,7 @@ package router
 
 import (
 	"traditional/models"
-	"github.com/gin-contrib/cors"
+	_"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"traditional/middleware"
 )
@@ -11,7 +11,7 @@ var r *gin.Engine
 
 func SetupRouter() {
 	r = gin.Default()
-	r .Use(cors.Default())
+	r.Use(middleware.Cors())
 
 	user := r.Group("/user")
 	{
@@ -26,7 +26,7 @@ func SetupRouter() {
 		article.GET("/index", models.GetAllArticle)     //首页获取所有文章列表
 		article.POST("/upload", middleware.AuthMiddleware, models.ArticleUpload) //上传文章
 		article.GET("/getarticke/:user", models.GetarticleOfUser) //获取某用户的文章列表
-	//	article.GET("/:articleid", models.Getarticle)  //获取某篇文章内容
+		article.GET("/:articleid", models.Getarticle)  //获取某篇文章内容
 
 	}
 

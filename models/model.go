@@ -52,26 +52,32 @@ func Close() {
 //-----------------------------------------------------------bolt部分-----------------------------------------------------
 
 var boltdb *bolt.DB
-var bucketArt = []byte("article") //存储文章的分组
+var bucketArt = []byte("arti") //存储文章的分组
 //初始化bolt
-func InitBolt(sleepNum int) *bolt.DB{
-	boltdb, err := bolt.Open("../art/article.db", 0600, &bolt.Options{Timeout:time.Duration(sleepNum) * time.Second})
+func InitBolt(sleepNum int) *bolt.DB {
+	//bolt一定传入绝对路径
+	var err error
+	boltdb, err = bolt.Open("D:/go_workspace/src/traditional/art/article.db", 0600, &bolt.Options{Timeout:time.Duration(sleepNum) * time.Second})
 	if err != nil{
 		fmt.Println("InitBolt:", err)
 	}
-	defer boltdb.Close()
 	return boltdb
 }
 
+//关闭bolt
+func BlotClose(){
+	boltdb.Close()
+}
+
 //写入文章
-func ArticleSet(arti, artid []byte) error{
+func ArticleSet(artid int, arti string) error{
 	if err := boltdb.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(bucketArt)
 		if err != nil {
 			return err
 		}
 
-		err = bucket.Put(artid, arti)
+		err = bucket.Put([]byte(string(artid)), []byte(arti))
 		if err != nil {
 			return err
 		}

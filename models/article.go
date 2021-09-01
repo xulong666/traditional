@@ -5,7 +5,7 @@ import (
 	"net/http"
 	_ "path"
 	_ "path/filepath"
-	 "strconv"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,80 +13,79 @@ import (
 
 type Article struct {
 	Model
-	Author string `gorm:"not null, foreignKey"`
-	Title  string `gorm:"not null" json:"title" form:"title"`
+	Author   string `gorm:"not null, foreignKey"`
+	Title    string `gorm:"not null" json:"title" form:"title"`
 	Abstract string `gorm:"not null" json:"content" form:"content"`
 	CreateAt time.Time
-	Update int64 `grom:"autoCreateTime"`
+	Update   int64 `grom:"autoCreateTime"`
 }
 
-type Index struct{
+type Index struct {
 	Model
-	Author string
-	Title string
+	Author   string
+	Title    string
 	Abstract string
 }
 
 //获取所有文章
-func GetAllArticle(c *gin.Context){
-	index,_ := strconv.Atoi(c.DefaultQuery("id", ""))
-  var num Index
+func GetAllArticle(c *gin.Context) {
+	index, _ := strconv.Atoi(c.DefaultQuery("id", ""))
+	var num Index
 	//获取总文章数量
 	db.Table("articles").Last(&num)
 	allnum := num.ID
 	fmt.Printf("num: %v", num)
-	if allnum == 0{
+	if allnum == 0 {
 		fmt.Println("获取文章总数失败")
 		return
 	}
 	//分页 每页10条记录
 	var articles []Index
-	db.Table("articles").Limit(10).Offset(index * 10).Find(&articles)
-	c.JSON(http.StatusOK, gin.H{"code":200, "articles":articles, "allnum":allnum})
+	db.Table("articles").Limit(6).Offset(index * 6).Find(&articles)
+	c.JSON(http.StatusOK, gin.H{"code": 200, "articles": articles, "allnum": allnum})
 
 }
 
-
 //上传文章
-func ArticleUpload(c *gin.Context){
+func ArticleUpload(c *gin.Context) {
 	var article Article
-	c.Bind(&article)
+	c.ShouldBind(&article)
 	// 获取文章数据等待存入bolt， mysql中只存如文摘就好[100字]
 	content := article.Abstract
 	fmt.Println("len(content): ", len(content))
-	if len(content)  > 100 {
-		abstract := content[0:100]
+	if len(content) > 400 {
+		abstract := content[0:400]
 		article.Abstract = abstract
+	} else {
+		article.Abstract = content
 	}
 
 	fmt.Println("content:", content)
-	
-  article.CreateAt = time.Now()
+
+	article.CreateAt = time.Now()
 	//获取用户名
-  name, _ := c.Get("user")
+	name, _ := c.Get("user")
 	article.Author = name.(string)
 	db.Create(&article)
-	c.JSON(http.StatusOK, gin.H{"code":200, "info": "article is upload success"})
 	// 将content存入bolt中， 首先获取该文章id
-	var index struct{
-		ID int
-	}
-	db.Table("articles").Select("id").Where(&article).Find(&index)
-	if index.ID == 0{
-		c.JSON(http.StatusOK, gin.H{"code":400, "error":"文章上传失败"})
+	//*****************
+	if article.ID == 0 {
+		fmt.Printf("index.ID: %v", article)
+		c.JSON(http.StatusOK, gin.H{"code": 400, "error": "文章上传失败"})
 		return
 	}
 
-	if err := ArticleSet([]byte(content), []byte(string(index.ID))); err != nil{
+
+  fmt.Printf("Article.id : %v\n", article.ID)
+	if err := ArticleSet(int(article.ID), content); err != nil {
 		fmt.Println("文章落库失败: ", err)
-		c.JSON(http.StatusOK, gin.H{"code":400, "error":"文章上传失败"})
+		c.JSON(http.StatusOK, gin.H{"code": 400, "error": "文章落库失败"})
 		return
-	}else{
-		c.JSON(http.StatusOK, gin.H{"code":200, "error":"文章上传成功"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"code": 200, "info": "article is upload success"})
 	}
 
 }
-
 
 // func ArticleUpload(c *gin.Context) {
 // 	//获取文件名， 并对后缀名进行判断
@@ -153,7 +152,12 @@ func AddArticle(author, title string) uint {
 }
 
 //-----------------------------------------------------获取某一篇文章--------------------------------------
-// func Getarticle(c *gin.Context){
-// 	articleid := c.Param("articleid")
+func Getarticle(c *gin.Context) {
+	articleid := c.Param("articleid")
+	var content string
+	 
+  id, _ := strconv.Atoi(articleid)
 
-// }
+	ArticleGet(id, &content)
+	c.JSON(http.StatusOK, gin.H{"code":"200", "content":content})
+}

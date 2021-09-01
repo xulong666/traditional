@@ -18,9 +18,11 @@ type Claims struct {
 var jwtkey = []byte("hello world")
 
 //颁发token
-func ReleaseTocken(c *gin.Context) {
-	username := c.PostForm("username")
+func ReleaseTocken(c *gin.Context, username string) {
+	//username := c.PostForm("username")
+	fmt.Println("jwt******username:", username)
 	ID := GetId(username) //获取数据库中的id， 赋值给claims.UserId
+	fmt.Println("jwt******id:", ID)
 	expirationTime := time.Now().Add(2 * time.Hour)
 	claims := &Claims{
 		UserId: ID,
@@ -39,7 +41,7 @@ func ReleaseTocken(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 200,
 			"login":"success",
-			"token:": tokenString,
+			"token": tokenString,
 		})
 	}
 

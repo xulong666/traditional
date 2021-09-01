@@ -53,7 +53,7 @@ func Login(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"code": 400, "error": "password is invalid"})
 				fmt.Println("Login: password is erro")
 			} else {
-				ReleaseTocken(c)
+				ReleaseTocken(c, name)
 			}
 		}
 	}

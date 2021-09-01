@@ -36,6 +36,9 @@ func main() {
 	models.InitialMysql(mysqlUser, mysqlPassword, mysqlDatabase)
 	defer models.Close()
 
+	//初始化bolt
+	models.InitBolt(1)
+  defer models.BlotClose()
 	//开启http服务
 
 	router.SetupRouter()
